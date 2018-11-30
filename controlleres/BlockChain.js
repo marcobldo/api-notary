@@ -3,12 +3,11 @@
 |  ================================================*/
 
 const SHA256 = require('crypto-js/sha256');
-const LevelSandboxClass = require('./LevelSandbox.js');
 const Block = require('../models/Block.js');
 //Importing levelSandbox class
-
-// Creating the levelSandbox class object
+const LevelSandboxClass = require('../controlleres/LevelSandbox.js');
 const db = new LevelSandboxClass.LevelSandbox();
+
 
 class Blockchain {
 

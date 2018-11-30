@@ -19,7 +19,7 @@ let myBlockChain = new BlockChain.Blockchain();
 		myBlockChain.addBlock(blockTest).then((result) => {
 			console.log(result);
 			i++;
-			if (i < 3) theLoop(i);
+			if (i < 10) theLoop(i);
 		}, function(err){
 			console.log(err);
 		});
@@ -30,7 +30,7 @@ let myBlockChain = new BlockChain.Blockchain();
 
 /***********************************************
  ** Function to get the Height of the Chain ****
- ***********************************************/
+ ***********************************************
 // Be careful this only will work if `getBlockHeight` method in Blockchain.js file return a Promise
 setTimeout(function () {
 	myBlockChain.getBlockHeight().then((result) => {
@@ -42,7 +42,7 @@ setTimeout(function () {
 
 /***********************************************
  ******** Function to Get a Block  *************
- ***********************************************/
+ ***********************************************
 setTimeout(function () {
 	myBlockChain.getBlockHeight().then((actualHeight) => {
 		myBlockChain.getBlock(actualHeight-1).then((block) => {
@@ -54,7 +54,7 @@ setTimeout(function () {
 
 /***********************************************
  ***************** Validate Block  *************
- ***********************************************/
+ ***********************************************
 // Be careful this only will work if `validateBlock` method in Blockchain.js file return a Promise
 setTimeout(function () {
 	myBlockChain.getBlockHeight().then((blockHeight) => {
@@ -74,7 +74,7 @@ setTimeout(function () {
 
 /***********************************************
  ***************** Validate Chain  *************
- ***********************************************/
+ ***********************************************
 // Be careful this only will work if `validateChain` method in Blockchain.js file return a Promise
 setTimeout(function () {
 	console.log("\n\nSTARTING VALIDATE CHAIN DEBUG PROCESS!!!!!!");

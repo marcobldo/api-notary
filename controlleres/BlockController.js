@@ -30,14 +30,17 @@ class BlockController {
             if(request){
                 if(request.params){
                     if(request.params.index){
-                        if(request.params.index>0){
+                        if(request.params.index >= 0){
                             myBlockChain.getBlockHeight().then(
                                 (height) => {
-                                    if(request.params.index>height){
+                                    console.log("\ncurren Blockchain height: " + (height -1).toString());
+                                    if(request.params.index > height -1 ){
                                         res.send(JSON.stringify({ error: "Block not founded" }));
+                                        console.log("\nBlock not founded: "+ (request.params.index).toString());
+
                                     }else{           
                                         let actualHeight = request.params.index;
-                                        myBlockChain.getBlock(actualHeight-1).then((block) => {
+                                        myBlockChain.getBlock(actualHeight).then((block) => {
                                             console.log("\nBlock requested data:\n");
                                             console.log(block);
                                             res.send(JSON.stringify({ result: block }));

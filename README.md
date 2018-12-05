@@ -4,7 +4,33 @@ This is a simple local POST-GET Blockchain API for testing proposes.
 
 ## Getting Started
 
-Clone the project and running on your local machine on port *8000*  for development and testing purposes.
+hese instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+## Deploy
+
+
+### Prerequisites
+
+What things you need to install the software and how to install them:
+
+```
+npm install crypto-js
+```
+```
+npm install level
+```
+
+### Run the Project
+Clone the project and running on your local machine, this project will run on port *8000*. 
+Make it sure you have this port free.
+
+For running the project, please go to the project main path and execute the next node js command:
+
+```
+npm start
+```
+
+
 
 ## API Usage
 
@@ -61,15 +87,23 @@ Connection: close
 {"result":"Block added!"}
 ```
 
-### Error Catching
+## Error Catching
 In case of sending an ivalid request, the API will send you the next string response on JSON format.
 ```
 POST / GET
-HTTP/1.1 200 OK
+HTTP/1.1 Please see Header Error Codes*
 content-type: application/json; charset=utf-8
 Connection: close
 {"error":"Error description"}
 ```
+
+### *Header Error Codes
+This API has the following error codes:
+400 Bad Request
+404 Not Found
+422 Unprocessable Entity
+500 Internal Server Error
+
 
 ## Built With
 

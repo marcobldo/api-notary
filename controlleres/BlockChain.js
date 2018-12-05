@@ -37,7 +37,7 @@ class Blockchain {
             //this.chain.push(newBlock);
 
             db.addLevelDBData(0,JSON.stringify(newBlock).toString()).then((result) => {
-                console.log("BLock added: " + result);
+                //console.log("BLock added: " + result);
             }).catch((err) => { console.log(err);});
 
         }

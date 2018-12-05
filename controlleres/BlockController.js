@@ -1,8 +1,7 @@
 const BlockClass = require('../models/Block.js');
 const BlockChain = require('../controlleres/BlockChain.js');
 let myBlockChain = new BlockChain.Blockchain();
-// Creating the levelSandbox class object
-const LevelSandboxClass = require('./LevelSandbox.js');
+
 
 /**
  * Controller Definition to encapsulate routes to work with blocks
@@ -15,7 +14,6 @@ class BlockController {
      */
     constructor(app) {
         this.app = app;
-        this.blocks = new LevelSandboxClass.LevelSandbox();
         this.initializeMockData();
         this.getBlockByIndex();
         this.postNewBlock();
@@ -25,48 +23,58 @@ class BlockController {
      * Implement a GET Endpoint to retrieve a block by index, url: "/api/block/:index"
      */
     getBlockByIndex() {
-        this.app.get("/api/block/:index", (request, res) => {
+        this.app.get("/api/block/:parm", (request, res) => {
             res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 200;
             if(request){
                 if(request.params){
-                    if(request.params.index){
-                        if(request.params.index >= 0){
+                    if(request.params.parm){
+                        if(request.params.parm >= 0){
+                            console.log("\nGet: " + (request.params.parm).toString());
                             myBlockChain.getBlockHeight().then(
                                 (height) => {
                                     console.log("\ncurren Blockchain height: " + (height -1).toString());
-                                    if(request.params.index > height -1 ){
+                                    if(request.params.parm > height -1 ){
+                                        res.statusCode = 404;
                                         res.send(JSON.stringify({ error: "Block not founded" }));
-                                        console.log("\nBlock not founded: "+ (request.params.index).toString());
+                                        console.log("\nBlock not founded: "+ (request.params.parm).toString());
 
                                     }else{           
-                                        let actualHeight = request.params.index;
+                                        let actualHeight = request.params.parm;
                                         myBlockChain.getBlock(actualHeight).then((block) => {
                                             console.log("\nBlock requested data:\n");
                                             console.log(block);
-                                            res.send(JSON.stringify({ result: block }));
+                                            res.send(JSON.stringify({ result: JSON.parse(block) }));
                                         }).catch((err) => { 
                                             console.log(err);
+                                            res.statusCode = 400;
                                             res.send(JSON.stringify({ error: err }));
+                                           
                                         });
                                     }
                                 }
                             ).catch(
                                 (err) => {
                                     console.log(err);
+                                    res.statusCode = 400;
                                     res.send(JSON.stringify({ error: err }));
                                 }
                             );
                         }else {
+                            res.statusCode = 404;
                             res.send(JSON.stringify({ error: "Block not founded" }));
                         }
                     }else {
-                        res.send(JSON.stringify({ error: "Invalid GET params" }));
+                        res.statusCode = 422;
+                        res.send(JSON.stringify({ error: "Unprocessable Entity" }));
                     }
                 }else {
-                    res.send(JSON.stringify({ error: "Invalid GET params" }));
+                    res.statusCode = 422;
+                    res.send(JSON.stringify({ error: "Unprocessable Entity" }));
                 }
             } else {
-                res.send(JSON.stringify({ error: "Invalid GET request" }));
+                res.statusCode = 400;
+                res.send(JSON.stringify({ error: "Bad Request" }));
             }
         });
     }
@@ -77,6 +85,7 @@ class BlockController {
     postNewBlock() {
         this.app.post("/api/block", (req, res) => {
             // Add your code here
+            res.setHeader('Content-Type', 'application/json');
             if(req){
                 console.log(req.body);// your JSON
                 if(req.body){
@@ -88,20 +97,28 @@ class BlockController {
                             (_result) => {
                                 console.log("Correctly added");
                                 console.log(_result);
-                                res.send(JSON.stringify({ result: "Correctly added" }));
+                                res.send(JSON.stringify({ result : _newBlock }));                    
                             }
                         ).catch(
                             (err) => {
+                                res.statusCode = 400;
+                                console.log("Error. " + err);
                                 res.send(JSON.stringify({ error: err }));
                             }
                         );
                     } else {
+                        res.statusCode = 422;
+                        console.log("Error. invalid params");
                         res.send(JSON.stringify({ error: "invalid params" }));
                     }
                 } else {
+                    res.statusCode = 422;
+                    console.log("Error. invalid NULL params");
                     res.send(JSON.stringify({ error: "invalid NULL params" }));
                 }
             } else {
+                res.statusCode = 400;
+                console.log("Error. invalid request");
                 res.send(JSON.stringify({ error: "Invalid request" }));
             }
         });
@@ -111,6 +128,7 @@ class BlockController {
      * Helper method to initialize a Mock dataset. It adds 10 test blocks to the blocks array.
      */
     initializeMockData() {
+/*
         (function theLoop (i) {
             setTimeout(function () {
                 let blockTest = new BlockClass.Block("Test Block");
@@ -123,6 +141,7 @@ class BlockController {
                 });
             }, 0);  // set the time to generate new blocks, 0 =  immediately
           })(0);
+*/
     }
 
 

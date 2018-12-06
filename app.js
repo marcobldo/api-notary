@@ -1,6 +1,6 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var app;
+let express = require('express');
+let bodyParser = require('body-parser');
+let app;
 
 class BlockAPI {
 

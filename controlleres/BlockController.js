@@ -19,11 +19,9 @@ class BlockController {
         this.postNewBlock();
     }
 
-    /**
-     * Implement a GET Endpoint to retrieve a block by index, url: "/api/block/:index"
-     */
+
     getBlockByIndex() {
-        this.app.get("/api/block/:parm", (request, res) => {
+        this.app.get("/block/:parm", (request, res) => {
             res.setHeader('Content-Type', 'application/json');
             res.statusCode = 200;
             if(request){
@@ -83,7 +81,7 @@ class BlockController {
      * Implement a POST Endpoint to add a new Block, url: "/api/block"
      */
     postNewBlock() {
-        this.app.post("/api/block", (req, res) => {
+        this.app.post("/block", (req, res) => {
             // Add your code here
             res.setHeader('Content-Type', 'application/json');
             if(req){

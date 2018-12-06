@@ -77,9 +77,7 @@ class BlockController {
         });
     }
 
-    /**
-     * Implement a POST Endpoint to add a new Block, url: "/api/block"
-     */
+
     postNewBlock() {
         this.app.post("/block", (req, res) => {
             // Add your code here

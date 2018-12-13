@@ -35,6 +35,8 @@ class BlockAPI {
      */
     initControllers() {
         require("./controlleres/BlockController.js")(this.app);
+        require("./controlleres/MempoolController.js")(this.app);
+
     }
 
     /**

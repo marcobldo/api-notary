@@ -1,5 +1,5 @@
-2018/12/05-18:49:43.336 4a54 Recovering log #67
-2018/12/05-18:49:43.336 4a54 Level-0 table #70: started
-2018/12/05-18:49:43.365 4a54 Level-0 table #70: 331 bytes OK
-2018/12/05-18:49:43.390 4a54 Delete type=0 #67
-2018/12/05-18:49:43.390 4a54 Delete type=3 #65
+2018/12/12-19:22:21.316 7ca4 Recovering log #97
+2018/12/12-19:22:21.317 7ca4 Level-0 table #99: started
+2018/12/12-19:22:21.355 7ca4 Level-0 table #99: 331 bytes OK
+2018/12/12-19:22:21.402 7ca4 Delete type=0 #97
+2018/12/12-19:22:21.404 7ca4 Delete type=3 #95

@@ -39,8 +39,16 @@ class MempoolController {
                             if(isSignValid){
                                 signRequest.registerStar = true;
                                 console.log("ValidationRequest is VALID");
+
+                                try{
+                                    this.removeValidationRequestOfTimeoutRequests(validationRequest);
+                                }catch (err){
+                                    res.statusCode = 400;
+                                    console.log("Error. " + err);
+                                    res.send(JSON.stringify({ error: err }));                                }
                             }else{
                                 console.log("ValidationRequest is NOT VALID");
+
                             }
                             res.json(signRequest);
                         }else{
@@ -83,6 +91,14 @@ class MempoolController {
         return bitcoinMessage.verify(message, address, messageSignature);
     }
 
+    removeValidationRequestOfTimeoutRequests(validationRequest){
+        if(validationRequest){
+            
+        }else{
+            console.log("INVALID validationRequest");
+            throw new Error("INVALID validationRequest");
+        }
+    }
 
     findWalletInPoolTimeoutRequest(walletAddress){
         var requestFounded = null;

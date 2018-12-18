@@ -7,7 +7,7 @@ const TimeoutRequestsWindowTime = 5*60*1000;
 class ValidationRequest{
 
 	constructor(address){
-     this.walletAddress = address,
+     this.address = address,
      this.validationWindow = 0,
      this.requestTimeStamp = 0, 
      this.message = "",
@@ -24,10 +24,10 @@ class ValidationRequest{
        return new Date().getTime().toString().slice(0,-3);
     }
     
-    generateMessage(walletAddress){
+    generateMessage(address){
         //Message format = [walletAddress]:[timeStamp]:starRegistry
-        if(walletAddress){
-            return walletAddress+":"+this.requestTimeStamp+"starRegistry";
+        if(address){
+            return address+":"+this.requestTimeStamp+":starRegistry";
         }
     }
 

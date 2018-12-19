@@ -5,7 +5,8 @@
 class SignRequest{
 
 	constructor(_validationRequest){
-        this.validationRequest = _validationRequest,
+        this.status = _validationRequest,
+        this.status.messageSignature = false;
         this.registerStar = false;
     }
 

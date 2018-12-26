@@ -54,6 +54,17 @@ class Mempool {
                 }, TimeoutRequestsWindowTime );
     }
 
+    removeValidationRequest(validationRequest){
+        //console.log(this.timeoutRequests);
+        let index = this.mempoolRequests.indexOf(validationRequest);
+        if (index >= 0) {
+            console.log("\nRequest address removed!!");
+            this.mempoolRequests.splice(index, 1);
+        }else{
+            console.log("\nRequest address not removed!!");
+        }
+    }
+
     findWalletInPoolTimeoutRequest(walletAddress){
         let _this = this;
         var requestFounded = null;

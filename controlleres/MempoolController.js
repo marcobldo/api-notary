@@ -1,10 +1,5 @@
-const ValidatioNRequestClass = require('../models/ValidationRequest.js');
-const SignRequestClass = require('../models/SignRequest.js');
-const bitcoinMessage = require('bitcoinjs-message'); 
 const Mempool = require('../controlleres/Mempool.js'); 
 const APIError = require('../controlleres/APIErrorControler.js');
-
-const TimeoutRequestsWindowTime = 5*60*1000;
 let myMempool = new Mempool.Mempool();
 let myAPIError =  new APIError.APIErrorController();
 
@@ -15,8 +10,6 @@ class MempoolController {
 */
     constructor(app) {
         this.app = app;
-        this.mempool = [];
-        this.timeoutRequests = [];
         this.addRequestValidation();
         this.validateMessage();
 
@@ -35,6 +28,7 @@ class MempoolController {
                 myMempool.validateMessage(walletAddress, messageSignature).then(
                     (validationRequest) => {
                         if(validationRequest){
+                            res.statusCode = 200;
                             res.json(newSignRequest);
                         }else{
                             res.statusCode = 400;
@@ -61,89 +55,6 @@ class MempoolController {
     }
 
 
-    validateRequestWindowTime(validationRequest){
-        let isValid = true;
-        if(validationRequest){
-            if(validationRequest.validationWindow < 1){
-                isValid = false;
-            }
-        }else{
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-
-    //it should be a promise!!!
-    validateMessageSignRequest(signRequest,messageSignature){
-        let message = signRequest.status.message;
-        let address = signRequest.status.address;
-        return bitcoinMessage.verify(message, address, messageSignature);
-    }
-
-    sendValidationRequestToMempool(signRequest){
-        if(signRequest){
-            this.mempool.push(signRequest);
-            this.setSignRequestTimeOut(signRequest);
-            this.removeValidationRequest(signRequest.status)
-        }else{
-            console.log("INVALID validationRequest");
-            throw new Error("INVALID validationRequest");
-        }
-    }
-
-    findSignRerquestOnMempool(walletAddress){
-        var signRequestFounded = null;
-        if(walletAddress){
-            if(this.mempool){
-                let _this = this;
-                this.mempool.forEach(function(signRequest) {
-                    //console.log(validationRequest);
-                        if(signRequest.status.address === walletAddress){
-                            signRequestFounded = signRequest;
-                            return;
-                        }
-                  });
-            }
-        }
-        if(!signRequestFounded){
-            console.log("Wallet address NOT FOUNDED  on MermPool!");
-        }else{
-            console.log("Wallet address founded on MermPool!!!");
-        }
-        return signRequestFounded;
-    }
-
-    findWalletInPoolTimeoutRequest(walletAddress){
-        var requestFounded = null;
-        if(walletAddress){
-            if(this.timeoutRequests){
-                let _this = this;
-                this.timeoutRequests.forEach(function(validationRequest) {
-                    //console.log(validationRequest);
-                        if(validationRequest.address === walletAddress){
-                            requestFounded = validationRequest;
-                            return;
-                        }
-                  });
-            }
-        }
-        if(!requestFounded){
-            console.log("Wallet address NOT FOUNDED  on PoolTimeoutRequest!");
-        }else{
-            console.log("Wallet address founded!!!");
-        }
-        return requestFounded;
-    }
-
-    calculeValidationTimeLeft(_newValidationRequest){
-        let timeElapse = (new Date().getTime().toString().slice(0,-3)) - _newValidationRequest.requestTimeStamp;
-        let timeLeft = (TimeoutRequestsWindowTime/1000) - timeElapse;
-        console.log("\nnew TimeWindow: "+timeLeft);// your JSON
-        return  timeLeft;
-    }
-
     addRequestValidation() {
         this.app.post("/requestValidation", (req, res) => {
             res.setHeader('Content-Type', 'application/json');
@@ -166,44 +77,6 @@ class MempoolController {
             }
         });
     }
-
-    setRequestTimeOut(validationRequest){
-        let self = this;
-        this.timeoutRequests[validationRequest] = setTimeout(
-            function() {
-                self.removeValidationRequest(validationRequest) 
-                }, TimeoutRequestsWindowTime );
-    }
-
-    removeValidationRequest(validationRequest){
-        //console.log(this.timeoutRequests);
-        let index = this.timeoutRequests.indexOf(validationRequest);
-        if (index >= 0) {
-            console.log("\nRequest address removed!!");
-            this.timeoutRequests.splice(index, 1);
-        }else{
-            console.log("\nRequest address not removed!!");
-        }
-    }
-
-
-    setSignRequestTimeOut(signRequest){
-        let self = this;
-        this.mempool[signRequest] = setTimeout(
-            function() {
-                self.removeValidationRequest(signRequest) 
-                }, TimeoutRequestsWindowTime );
-    }
-
-    removesignRequestMempool(signRequest){
-        let index = this.mempool.indexOf(signRequest);
-        if (index > -1) {
-            console.log("\nSignRequest address removed!!");
-            this.timeoutRequests.splice(index, 1);
-        }
-    }
-
-
 
 }
 

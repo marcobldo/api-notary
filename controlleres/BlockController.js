@@ -1,6 +1,9 @@
 const BlockClass = require('../models/Block.js');
 const BlockChain = require('../controlleres/BlockChain.js');
+const Mempool = require('../controlleres/Mempool.js');
+
 let myBlockChain = new BlockChain.Blockchain();
+let myMempool = new Mempool.Mempool();
 
 
 /**
@@ -77,41 +80,61 @@ class BlockController {
         });
     }
 
+    validateBlockArguments(newBlock){
+        if(newBlock){
+            if(newBlock.address){
+                if(newBlock.address.length===0){
+                    throw new Error("empty address request parm");
+                }
+            }else{
+                throw new Error("invalid address request parm");
+            }
+            if(newBlock.star){
+                if(newBlock.star.length===0){
+                    throw new Error("empty address request parm");
+                }
+            }
+        }
+    }
 
     postNewBlock() {
+        console.log("posting");// your JSON
+
         this.app.post("/block", (req, res) => {
-            // Add your code here
             res.setHeader('Content-Type', 'application/json');
             if(req){
-                console.log(req.body);// your JSON
-                if(req.body){
-                    if(req.body.body){
-                        console.log("Posting you block");// your JSON
-                        let _newBlock = new BlockClass.Block(req.body.body);
-                        console.log(JSON.stringify(_newBlock));
-                        myBlockChain.addBlock(_newBlock).then(
-                            (_result) => {
-                                console.log("Correctly added");
-                                console.log(_result);
-                                res.send(JSON.stringify({ result : _newBlock }));                    
-                            }
-                        ).catch(
-                            (err) => {
-                                res.statusCode = 400;
-                                console.log("Error. " + err);
-                                res.send(JSON.stringify({ error: err }));
-                            }
-                        );
-                    } else {
-                        res.statusCode = 422;
-                        console.log("Error. invalid params");
-                        res.send(JSON.stringify({ error: "invalid params" }));
-                    }
-                } else {
-                    res.statusCode = 422;
-                    console.log("Error. invalid NULL params");
-                    res.send(JSON.stringify({ error: "invalid NULL params" }));
-                }
+            //We sould hace some kind of arguments validation
+                try {
+                    console.log(req.body);// your JSON
+                    let newBlockRequest =  req.body;
+                    this.validateBlockArguments(newBlockRequest);
+                    let validationRequest = mempool.findWalletInPoolTimeoutRequest(newBlockRequest.address);
+                    console.log(JSON.stringify(validationRequest));
+
+                    /*
+                    let _newBlock = new BlockClass.Block(newBlockRequest.body);
+                    myBlockChain.addBlock(_newBlock).then(
+                        (_result) => {
+                            console.log("Correctly added");
+                            console.log(_result);
+                            res.send(JSON.stringify({ result : _newBlock }));                    
+                        }
+                    ).catch(
+                        (err) => {
+                            res.statusCode = 400;
+                            console.log("Error. " + err);
+                            res.send(JSON.stringify({ error: err }));
+                        }
+                    );
+
+                    */
+                } catch (err){
+                    console.log("\n Error: " + err);
+                    res.statusCode = 404;
+                    res.send(JSON.stringify({ error: err }));
+                }      
+
+                
             } else {
                 res.statusCode = 400;
                 console.log("Error. invalid request");

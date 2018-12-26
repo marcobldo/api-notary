@@ -21,6 +21,21 @@ class APIErrorController {
                         }
                     break;
 
+                    case "validateMessage":
+                    let walletAddress = req.body.address;
+                    let messageSignature = req.body.signature;
+                    if(!walletAddress){
+                        isValid = false;
+                        apiError.code = "422";
+                        apiError.message = "Invalid walletAddress data";
+                    }
+                    if(!messageSignature){
+                        isValid = false;
+                        apiError.code = "422";
+                        apiError.message = "Invalid messageSignature data";
+                    }
+                    break;
+
                     default:
                     isValid = false;
                     apiError.message = "Something wrong!";

@@ -28,74 +28,36 @@ class MempoolController {
         this.app.post("/message-signature/validate", (req, res) => {
             // Add your code here
             res.setHeader('Content-Type', 'application/json');
-            if(req){
-                if(req.body){
-                    console.log(req.body);// your JSON
-                    if(req.body.address && req.body.signature){
-                        let walletAddress = req.body.address;
-                        let messageSignature = req.body.signature;
-                        let validationRequest = this.findWalletInPoolTimeoutRequest(walletAddress);
-                        console.log(JSON.stringify(validationRequest));
+            try{
+                myAPIError.validatePOSTEnpointData(req, "validateMessage");
+                let walletAddress = req.body.address;
+                let messageSignature = req.body.signature;
+                myMempool.validateMessage(walletAddress, messageSignature).then(
+                    (validationRequest) => {
                         if(validationRequest){
-                            let isRequestWindowTimeValid = this.validateRequestWindowTime(validationRequest);
-                            if(isRequestWindowTimeValid){
-                                                                //time is valid
-                                let newSignRequest =  new SignRequestClass.SignRequest(validationRequest);
-                                console.log("ValidationRequest WindowTime is VALID");     
-                                try{
-                                    let isSignValid =  this.validateMessageSignRequest(newSignRequest, messageSignature);
-                                    if(isSignValid){
-                                        newSignRequest.registerStar = true;
-                                            newSignRequest.status.messageSignature = true;
-                                            newSignRequest.status.validationWindow = this.calculeValidationTimeLeft(newSignRequest.status);
-                                            console.log("ValidationRequest SIGN is VALID");
-                                            //check if signRequest exist in mempool!!!
-                                            res.json(newSignRequest);
-                                    }else{
-                                        console.log("ValidationRequest SIGN is NOT VALID");
-                                    }
-                                }catch (err){
-                                    res.statusCode = 400;
-                                    console.log("Error. " + err);
-                                    res.send(JSON.stringify({ error: err }));                                
-                                }
-                            }else{
-                                //expired time reached
-                                res.statusCode = 404;
-                                console.log("Error. Validation request has expired");
-                                res.send(JSON.stringify({ error: "Validation request has expired" }));
-                            }
-                            
+                            res.json(newSignRequest);
                         }else{
-                            res.statusCode = 404;
-                            console.log("Error. validation request not founded in ValidationRequestPool");
-                            res.send(JSON.stringify({ error: "Validation request not founded in ValidationRequestPool" }));
+                            res.statusCode = 400;
+                            res.send(JSON.stringify({ error: "validateMessage" }));
                         }
-                        
-                    } else if(!req.body.address){
-                        res.statusCode = 422;
-                        console.log("Error. address invalid param");
-                        res.send(JSON.stringify({ error: "invalid params" }));
-                    } else if(!req.body.signature){
-                        res.statusCode = 422;
-                        console.log("Error. signature invalid param");
-                        res.send(JSON.stringify({ error: "invalid params" }));
-                    } else {
-                        res.statusCode = 422;
-                        console.log("Error. invalid params");
-                        res.send(JSON.stringify({ error: "invalid params" }));
                     }
-                } else {
-                    res.statusCode = 422;
-                    console.log("Error. invalid NULL params");
-                    res.send(JSON.stringify({ error: "invalid NULL params" }));
+                    ).catch (
+                    (err) => {
+                        res.statusCode = 400;
+                        res.send(JSON.stringify({ error: err }));
+                    });
+            }catch (err){
+                if(err.message && err.code){
+                    res.statusCode = err.code;
+                    console.log(err.message);
+                    res.send(JSON.stringify({ error: err.message }));
+                }else{
+                    res.statusCode = 500;
+                    console.log("Error. validateMessage Unexpected Error");
+                    res.send(JSON.stringify({ error: "Error. validateMessage Unexpected Error" }));
                 }
-            } else {
-                res.statusCode = 400;
-                console.log("Error. invalid request");
-                res.send(JSON.stringify({ error: "Invalid request" }));
             }
-        });
+        })
     }
 
 

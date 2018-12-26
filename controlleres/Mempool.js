@@ -7,9 +7,7 @@ const TimeoutRequestsWindowTime = 5*60*1000;
 
 class Mempool {
     constructor() {
-        //this.chain = new LevelSandbox.LevelSandbox();
         this.mempoolRequests = [];
-        this.initMempool();
     }
 
     addRequestValidation(walletAddress) {
@@ -17,7 +15,7 @@ class Mempool {
         return new Promise (function (resolve,reject){
             if(walletAddress){
                 let _newValidationRequest = new ValidatioNRequestClass.ValidationRequest(walletAddress);
-                _this.findWalletInPoolTimeoutRequest().then(
+                _this.findWalletInPoolTimeoutRequest(walletAddress).then(
                     (foundedValidation) => {
                         if(foundedValidation){
                             //case validation request founded
@@ -49,11 +47,12 @@ class Mempool {
 
     /**This method could return NULL */
     findWalletInPoolTimeoutRequest(walletAddress){
+        let _this = this;
         var requestFounded = null;
                 return new Promise (function (resolve,reject){
                     if(walletAddress){
-                        if(this.mempoolRequests){
-                            this.mempoolRequests.forEach(function(validationRequest) {
+                        if(_this.mempoolRequests){
+                            _this.mempoolRequests.forEach(function(validationRequest) {
                                 //console.log(validationRequest);
                                     if(validationRequest.address === walletAddress){
                                         requestFounded = validationRequest;
@@ -68,14 +67,14 @@ class Mempool {
                                 resolve(requestFounded);
                             }
                         } else {
-                            console.log("Error. invalid mempoolRequests[]");
+                            console.log("Error. not foounded, invalid mempoolRequests[]");
                             //have to throw an error!!
-                            reject("Error. invalid mempoolRequests[]");
+                            reject("Error. not foounded, invalid mempoolRequests[]");
                         }
                     } else {
-                        console.log("Error. invalid walletAddress");
+                        console.log("Error. not foounded, invalid walletAddress");
                         //have to throw an error!!
-                        reject("Error. invalid walletAddress");
+                        reject("Error. not foounded, invalid walletAddress");
                     }
                 });
     }

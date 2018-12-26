@@ -3,7 +3,6 @@ const BlockChain = require('../controlleres/BlockChain.js');
 const Mempool = require('../controlleres/Mempool.js');
 
 let myBlockChain = new BlockChain.Blockchain();
-let myMempool = new Mempool.Mempool();
 
 
 /**

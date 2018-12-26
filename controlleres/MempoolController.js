@@ -1,9 +1,10 @@
 const ValidatioNRequestClass = require('../models/ValidationRequest.js');
 const SignRequestClass = require('../models/SignRequest.js');
 const bitcoinMessage = require('bitcoinjs-message'); 
-const TimeoutRequestsWindowTime = 5*60*1000;
-//const TimeoutRequestsWindowTime = 10000;
+const Mempool = require('../controlleres/Mempool.js'); 
 
+const TimeoutRequestsWindowTime = 5*60*1000;
+let myMempool = new Mempool.Mempool();
 
 class MempoolController {
 /**
@@ -187,29 +188,15 @@ class MempoolController {
                     console.log(req.body);// your JSON
                     if(req.body.address){
                         let walletAddress = req.body.address;
-                        if(walletAddress){
-                            let _newValidationRequest = new ValidatioNRequestClass.ValidationRequest(walletAddress);
-                            var foundedValidation = null;
-                            foundedValidation = this.findWalletInPoolTimeoutRequest(walletAddress);
-                            if(foundedValidation){
-                                //case validation request founded
-                                console.log("\nTimeWindow updated!!");// your JSON
-                                foundedValidation.validationWindow = this.calculeValidationTimeLeft(foundedValidation);
-                                console.log(JSON.stringify(foundedValidation));
-                                res.json(foundedValidation);
-                            }else{
-                                //case validation request not founded
-                                console.log("\nRequest address Added!!");// your JSON
-                                this.timeoutRequests.push(_newValidationRequest);
-                                this.setRequestTimeOut(_newValidationRequest);
-                                console.log(JSON.stringify(_newValidationRequest));
-                                res.json(_newValidationRequest);
+                        myMempool.addRequestValidation(walletAddress).then(
+                            (validationRequest) => {
+                                res.json(validationRequest);
                             }
-                        } else {
-                            res.statusCode = 400;
-                            console.log("Error. invalid request");
-                            res.send(JSON.stringify({ error: "Invalid request" }));
-                        }
+                            ).catch (
+                            (err) => {
+                                res.statusCode = 400;
+                                res.send(JSON.stringify({ error: err }));
+                            });
                     } else {
                         res.statusCode = 422;
                         console.log("Error. invalid params");

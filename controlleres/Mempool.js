@@ -34,6 +34,7 @@ class Mempool {
                     }
                 ).catch(
                     (error) => {
+                        console.log(error);// your JSON
                         reject(error);
                     }
                 );  
@@ -45,7 +46,14 @@ class Mempool {
         });
     }
 
-    /**This method could return NULL */
+    setRequestTimeOut(validationRequest){
+        let self = this;
+        this.mempoolRequests[validationRequest] = setTimeout(
+            function() {
+                self.removeValidationRequest(validationRequest) 
+                }, TimeoutRequestsWindowTime );
+    }
+
     findWalletInPoolTimeoutRequest(walletAddress){
         let _this = this;
         var requestFounded = null;

@@ -2,9 +2,11 @@ const ValidatioNRequestClass = require('../models/ValidationRequest.js');
 const SignRequestClass = require('../models/SignRequest.js');
 const bitcoinMessage = require('bitcoinjs-message'); 
 const Mempool = require('../controlleres/Mempool.js'); 
+const APIError = require('../controlleres/APIErrorControler.js');
 
 const TimeoutRequestsWindowTime = 5*60*1000;
 let myMempool = new Mempool.Mempool();
+let myAPIError =  new APIError.APIErrorController();
 
 class MempoolController {
 /**
@@ -183,34 +185,22 @@ class MempoolController {
     addRequestValidation() {
         this.app.post("/requestValidation", (req, res) => {
             res.setHeader('Content-Type', 'application/json');
-            if(req){
-                if(req.body){
-                    console.log(req.body);// your JSON
-                    if(req.body.address){
-                        let walletAddress = req.body.address;
-                        myMempool.addRequestValidation(walletAddress).then(
-                            (validationRequest) => {
-                                res.json(validationRequest);
-                            }
-                            ).catch (
-                            (err) => {
-                                res.statusCode = 400;
-                                res.send(JSON.stringify({ error: err }));
-                            });
-                    } else {
-                        res.statusCode = 422;
-                        console.log("Error. invalid params");
-                        res.send(JSON.stringify({ error: "invalid params" }));
+            try{
+                myAPIError.validatePOSTEnpointData(req, "addRequestValidation");
+                let walletAddress = req.body.address;
+                myMempool.addRequestValidation(walletAddress).then(
+                    (validationRequest) => {
+                        res.json(validationRequest);
                     }
-                } else {
-                    res.statusCode = 422;
-                    console.log("Error. invalid NULL params");
-                    res.send(JSON.stringify({ error: "invalid NULL params" }));
-                }
-            } else {
-                res.statusCode = 400;
-                console.log("Error. invalid request");
-                res.send(JSON.stringify({ error: "Invalid request" }));
+                    ).catch (
+                    (err) => {
+                        res.statusCode = 400;
+                        res.send(JSON.stringify({ error: err }));
+                    });
+            }catch (err){
+                res.statusCode = err.code;
+                console.log(err.message);
+                res.send(JSON.stringify({ error: err.message }));
             }
         });
     }

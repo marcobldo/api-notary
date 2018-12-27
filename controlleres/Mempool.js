@@ -15,22 +15,24 @@ class Mempool {
         let _this = this;
         return new Promise (function (resolve,reject){
             if(walletAddress){
-                let _newValidationRequest = new ValidatioNRequestClass.ValidationRequest(walletAddress);
+                let newValidationRequest = new ValidatioNRequestClass.ValidationRequest(walletAddress);
                 _this.findWalletInPoolTimeoutRequest(walletAddress).then(
                     (foundedValidation) => {
                         if(foundedValidation){
                             //case validation request founded
                             foundedValidation.validationWindow = _this.calculeValidationTimeLeft(foundedValidation);
-                            console.log("\nTimeWindow updated!!");// your JSON
+                            console.log("TimeWindow updated!!");// your JSON
                             console.log(JSON.stringify(foundedValidation));
+                            console.log("\n");
                             resolve(foundedValidation);
                         }else{
                             //case validation request not founded
-                            console.log("\nRequest address Added!!");// your JSON
-                            console.log(JSON.stringify(_newValidationRequest));
-                            _this.mempoolRequests.push(_newValidationRequest);
-                            _this.setRequestTimeOut(_newValidationRequest);
-                            resolve(_newValidationRequest);
+                            console.log("ValidationRequest added in mempoolRequests[]");// your JSON
+                            console.log(newValidationRequest);
+                            console.log("\n");
+                            _this.mempoolRequests.push(newValidationRequest);
+                            _this.setRequestTimeOut(newValidationRequest);
+                            resolve(newValidationRequest);
                         } 
                     }
                 ).catch(
@@ -60,28 +62,23 @@ class Mempool {
         this.mempoolValidSigns[validSign] = setTimeout(
             function() {
                 self.removeValidSign(validSign) 
-                }, timeLeft );
+            }, timeLeft*1000 );
+            //it has to be *1000 cause milliseconds 
     }
 
     removeValidationRequest(validationRequest){
-        //console.log(this.timeoutRequests);
         let index = this.mempoolRequests.indexOf(validationRequest);
         if (index >= 0) {
-            console.log("\nRequest address removed!!");
+            console.log("\nRequest address removed from mempoolRequests[]\n");
             this.mempoolRequests.splice(index, 1);
-        }else{
-            console.log("\nRequest address not removed!!");
         }
     }
 
     removeValidSign(validSign){
-        //console.log(this.timeoutRequests);
         let index = this.mempoolValidSigns.indexOf(validSign);
         if (index >= 0) {
-            console.log("\nValid sign removed!!");
             this.mempoolValidSigns.splice(index, 1);
-        }else{
-            console.log("\nValid sign not removed!!");
+            console.log("\nValid sign removed from mempoolValidSigns[]\n");
         }
     }
 
@@ -99,10 +96,10 @@ class Mempool {
                                     }
                               });
                             if(!requestFounded){
-                                console.log("Wallet address NOT FOUNDED  on PoolTimeoutRequest!");
+                                console.log("Wallet address NOT FOUNDED  in mempoolRequests[]");
                                 resolve(null);
                             }else{
-                                console.log("Wallet address founded!!!");
+                                console.log("Wallet address founded in mempoolRequests[]");
                                 resolve(requestFounded);
                             }
                         } else {
@@ -118,93 +115,132 @@ class Mempool {
                 });
     }
 
-    findSignInPoolValidSigns(validSign){
+    findSignInPoolValidSigns(walletAddress){
         let _this = this;
         var validSignFounded = null;
                 return new Promise (function (resolve,reject){
-                    if(validSign){
+                    if(walletAddress){
                         if(_this.mempoolValidSigns){
                             _this.mempoolValidSigns.forEach(function(sign) {
                                 //console.log(validationRequest);
-                                    if(sign.status.address === validSign.status.address){
+                                    if(sign.status.address === walletAddress){
                                         validSignFounded = sign;
                                         return;
                                     }
                               });
                             if(!validSignFounded){
-                                console.log("Wallet address NOT FOUNDED  on PoolValidSigns!");
+                                console.log("walletAddress NOT FOUNDED  in mempoolValidSigns[]!");
                             }else{
-                                console.log("Wallet address foundedon VALID Signs!!!");
+                                console.log("walletAddress FOUNDED in mempoolValidSigns[]");
                             }
                             //this method could return NULL...
                             resolve(validSignFounded);
                         } else {
-                            console.log("Error. not foounded, invalid mempoolValidSigns[]");
+                            console.log("Error. walletAddress NOT FOUNDED, invalid mempoolValidSigns[]");
                             //have to throw an error!!
-                            reject("Error. not foounded, invalid mempoolValidSigns[]");
+                            reject("Error. walletAddress NOT FOUNDED, invalid mempoolValidSigns[]");
                         }
                     } else {
-                        console.log("Error. not foounded, invalid sign");
+                        console.log("Error. walletAddress NOT FOUNDED, invalid walletAddress");
                         //have to throw an error!!
-                        reject("Error. not foounded, invalid sign");
+                        reject("Error. walletAddress NOT FOUNDED, invalid walletAddress");
                     }
                 });
     }
 
-    calculeValidationTimeLeft(_newValidationRequest){
-        let timeElapse = (new Date().getTime().toString().slice(0,-3)) - _newValidationRequest.requestTimeStamp;
+    calculeValidationTimeLeft(newValidationRequest){
+        let timeElapse = (new Date().getTime().toString().slice(0,-3)) - newValidationRequest.requestTimeStamp;
         let timeLeft = (TimeoutRequestsWindowTime/1000) - timeElapse;
-        console.log("\nnew TimeWindow: "+timeLeft);// your JSON
+        console.log("new TimeWindow: "+timeLeft);// your JSON
         return  timeLeft;
     }
 
 
     validateMessage(walletAddress, messageSignature) {
         let _this =  this;
-        return new Promise(function (reject,resolve){
+        return new Promise(function (resolve,reject){
             if(walletAddress && messageSignature){
-                _this.findWalletInPoolTimeoutRequest(walletAddress).then(
-                    (validationRequest) => {
-                        if(validationRequest){
-                            let isRequestWindowTimeValid = _this.validateRequestWindowTime(validationRequest);
-                            if(isRequestWindowTimeValid){
-                                //time is valid
-                                let newSignRequest =  new SignRequestClass.SignRequest(validationRequest);
-                                console.log("ValidationRequest WindowTime is VALID");     
-                                try{
-                                    let isSignValid =  _this.validateMessageSignRequest(newSignRequest, messageSignature);
-                                    if(isSignValid){
-                                        newSignRequest.registerStar = true;
-                                            newSignRequest.status.messageSignature = true;
-                                            let timeSignLeft = _this.calculeValidationTimeLeft(newSignRequest.status);
-                                            newSignRequest.status.validationWindow = timeSignLeft;
-                                            _this.mempoolValidSigns.push(newSignRequest);
-                                            _this.setSignTimeOut(newSignRequest,timeSignLeft);
-                                            console.log("ValidationRequest SIGN is VALID");
-                                            resolve(newSignRequest);
-                                    }else{
-                                        console.log("ValidationRequest SIGN is NOT VALID");
-                                        reject("ValidationRequest SIGN is NOT VALID");
+                //first, find validSign in signPool
+                _this.findSignInPoolValidSigns(walletAddress).then(
+                    (signMessageRequest) => {
+                        if(signMessageRequest){
+                            //just updating the time window
+                            let timeSignLeft = _this.calculeValidationTimeLeft(signMessageRequest.status);
+                            signMessageRequest.status.validationWindow = timeSignLeft;  
+                            var isSignValid = false;
+                            try {
+                                isSignValid =  _this.validateMessageSignRequest(signMessageRequest, messageSignature);
+                            } catch (err) {
+                                console.log(err);     
+                                reject(err.message);
+                            }
+                            if(isSignValid){
+                                console.log("signMessageRequest has a valid sign");     
+                                signMessageRequest.status.messageSignature = true;
+                            }else{
+                                console.log("signMessageRequest has an invalid sign");     
+                                signMessageRequest.status.messageSignature = false;
+                            }
+                            console.log("resolving findSignInPoolValidSigns");     
+                            resolve(signMessageRequest);
+                        }else{
+                            console.log("signMessageRequest is null,looking in mempoolRequests[] ");     
+
+                            // we cant find a signMessage, maybe it's expired, let's try  with  _this.findWalletInPoolTimeoutRequest
+                            _this.findWalletInPoolTimeoutRequest(walletAddress).then(
+                                (validationRequest) => {
+                                    if(validationRequest){
+                                        let isRequestWindowTimeValid = _this.validateRequestWindowTime(validationRequest);
+                                        if(isRequestWindowTimeValid){
+                                            //time is valid
+                                            let newSignRequest =  new SignRequestClass.SignRequest(validationRequest);
+                                            console.log("validationRequest WindowTime is VALID");     
+                                            var isSignValid = false;
+                                            try {
+                                                isSignValid =  _this.validateMessageSignRequest(newSignRequest, messageSignature);
+                                            } catch (err) {
+                                                console.log(err);     
+                                                reject(err.message);
+                                            }
+                                            if(isSignValid){
+                                                newSignRequest.registerStar = true;
+                                                newSignRequest.status.messageSignature = true;
+                                                let timeSignLeft = _this.calculeValidationTimeLeft(newSignRequest.status);
+                                                newSignRequest.status.validationWindow = timeSignLeft;
+                                                _this.mempoolValidSigns.push(newSignRequest);
+                                                _this.setSignTimeOut(newSignRequest,timeSignLeft);
+                                                console.log("pushing newSignRequest on mempoolValidSigns[]");     
+                                                console.log(newSignRequest);
+                                                console.log("\n");
+                                                resolve(newSignRequest);
+                                            }else{
+                                                console.log("signMessageRequest has an invalid sign");     
+                                                reject("newSignRequest.messageSignature is NOT VALID");
+                                            }
+                                        }else{
+                                            //expired time reached
+                                            console.log("Error. Validation request has expired");
+                                            reject("Error. Validation request has expired");
+                                        } 
+                                    } else {
+                                        console.log("Error, invalid validationRequest");     
+                                        reject("Error, invalid validationRequest");
                                     }
-                                }catch (err){
+                                }
+                            ).catch(
+                                (err) => {
                                     console.log(err);
                                     reject(err);
-                                }
-                            }else{
-                                //expired time reached
-                                console.log("Error. Validation request has expired");
-                                reject("Error. Validation request has expired");
-                            } 
-                        } else {
-                            console.log("Error, invalid validationRequest");     
-                            reject("Error, invalid validationRequest");
+                                });
                         }
                     }
                 ).catch(
                     (err) => {
                         console.log(err);
-                        reject(err);
-                    });
+                        reject(err);  
+                    }
+                );
+
             }else{
                 console.log("Error. validateMessage has invalid parms");     
                 reject("Error. validateMessage has invalid parms");
@@ -213,6 +249,7 @@ class Mempool {
     }
 
     validateMessageSignRequest(signRequest,messageSignature){
+        console.log("Validating sign");     
         let message = signRequest.status.message;
         let address = signRequest.status.address;
         return bitcoinMessage.verify(message, address, messageSignature);
@@ -230,10 +267,10 @@ class Mempool {
 
         return isValid;
     }
-    calculeValidationTimeLeft(_newValidationRequest){
-        let timeElapse = (new Date().getTime().toString().slice(0,-3)) - _newValidationRequest.requestTimeStamp;
+    calculeValidationTimeLeft(newValidationRequest){
+        let timeElapse = (new Date().getTime().toString().slice(0,-3)) - newValidationRequest.requestTimeStamp;
         let timeLeft = (TimeoutRequestsWindowTime/1000) - timeElapse;
-        console.log("\nnew TimeWindow: "+timeLeft);// your JSON
+        console.log("new TimeWindow: "+timeLeft);// your JSON
         return  timeLeft;
     }
 }

@@ -21,26 +21,12 @@ class MempoolController {
         this.app.post("/message-signature/validate", (req, res) => {
             // Add your code here
             res.setHeader('Content-Type', 'application/json');
+            let validDataRequest = true;
             try{
                 myAPIError.validatePOSTEnpointData(req, "validateMessage");
-                let walletAddress = req.body.address;
-                let messageSignature = req.body.signature;
-                myMempool.validateMessage(walletAddress, messageSignature).then(
-                    (validationRequest) => {
-                        if(validationRequest){
-                            res.statusCode = 200;
-                            res.json(newSignRequest);
-                        }else{
-                            res.statusCode = 400;
-                            res.send(JSON.stringify({ error: "validateMessage" }));
-                        }
-                    }
-                    ).catch (
-                    (err) => {
-                        res.statusCode = 400;
-                        res.send(JSON.stringify({ error: err }));
-                    });
             }catch (err){
+                validDataRequest = false;
+                console.log(err);
                 res.statusCode = 500;
                 if(err.message && err.code){
                     if (!isNaN(parseInt(err.code))) {
@@ -55,7 +41,25 @@ class MempoolController {
                     res.send(JSON.stringify({ error: "Error. validateMessage Unexpected Error" }));
                 }
             }
-        })
+            if(validDataRequest){
+                let walletAddress = req.body.address;
+                let messageSignature = req.body.signature;
+                myMempool.validateMessage(walletAddress, messageSignature).then(
+                    (validateMessageResponse) => {
+                        res.statusCode = 200;
+                        res.json(validateMessageResponse);
+                    }
+                ).catch (
+                    (err) => {
+                        res.statusCode = 400;
+                        res.send(JSON.stringify({ error: err }));
+                });
+            }else{
+                res.statusCode = 500;
+                console.log("Error. validateMessage Unexpected Error");
+                res.send(JSON.stringify({ error: "Error. validateMessage Unexpected Error" }));
+            }
+        });
     }
 
 

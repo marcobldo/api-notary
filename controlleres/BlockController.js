@@ -88,7 +88,7 @@ class BlockController {
                 myAPIError.validatePOSTEnpointData(req, "postNewBlock");
             }catch (err){
                 if(err.message && err.code){
-                    res.statusCode = parseInt(err.code);;
+                    res.statusCode = err.code;
                     console.log(err.message);
                     res.send(JSON.stringify({ error: err.message }));
                 }else{

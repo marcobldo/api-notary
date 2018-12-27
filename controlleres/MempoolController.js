@@ -41,8 +41,12 @@ class MempoolController {
                         res.send(JSON.stringify({ error: err }));
                     });
             }catch (err){
+                res.statusCode = 500;
                 if(err.message && err.code){
-                    res.statusCode = parseInt(err.code);;
+                    if (!isNaN(parseInt(err.code))) {
+                        res.statusCode = parseInt(err.code);
+                    }
+                    res.statusCode = parseInt(err.code);
                     console.log(err.message);
                     res.send(JSON.stringify({ error: err.message }));
                 }else{
@@ -71,16 +75,15 @@ class MempoolController {
                         res.send(JSON.stringify({ error: err }));
                     });
             }catch (err){
-                res.statusCode = parseInt(err.code);;
+                res.statusCode = 500;
+                if (!isNaN(parseInt(err.code))) {
+                    res.statusCode = parseInt(err.code);
+                }
                 console.log(err.message);
                 res.send(JSON.stringify({ error: err.message }));
             }
         });
     }
-
-    validateSignWithAddress(walletAddress){
-        
-    };
 
 }
 

@@ -9,12 +9,12 @@ class APIErrorController {
     validatePOSTEnpointData(req, type){
         apiError.code = "400";
         var isValid = true;
+        let bodyRequest = req.body;
         if(req){
             if(req.body){
                 switch(type){
                     case "addRequestValidation":
-                        let address = req.body.address;
-                        if(!address){
+                        if(!bodyRequest.address){
                             isValid = false;
                             apiError.code = "422";
                             apiError.message = "Invalid address data";
@@ -22,14 +22,12 @@ class APIErrorController {
                     break;
 
                     case "validateMessage":
-                    let walletAddress = req.body.address;
-                    let messageSignature = req.body.signature;
-                    if(!walletAddress){
+                    if(!bodyRequest.address){
                         isValid = false;
                         apiError.code = "422";
                         apiError.message = "Invalid walletAddress data";
                     }
-                    if(!messageSignature){
+                    if(!bodyRequest.signature){
                         isValid = false;
                         apiError.code = "422";
                         apiError.message = "Invalid messageSignature data";
@@ -37,20 +35,18 @@ class APIErrorController {
                     break;
 
                     case "postNewBlock":
-                    let walletAddress = req.body.address;
-                    let messageSignature = req.body.star;
-                    if(!walletAddress){
+                    if(!bodyRequest.address){
                         isValid = false;
                         apiError.code = "422";
                         apiError.message = "Invalid walletAddress data";
                     }
-                    if(!star){
+                    if(!bodyRequest.star){
                         isValid = false;
                         apiError.code = "422";
                         apiError.message = "Invalid star data";
                     }else{
                         try{
-                            let jsonRequestContent = JSON.parse(contents);
+                            let jsonRequestContent = JSON.parse(bodyRequest.star);
                             if(jsonRequestContent){
                                 if(!jsonRequestContent.dec){
                                     isValid = false;

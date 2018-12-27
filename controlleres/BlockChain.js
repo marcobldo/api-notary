@@ -4,17 +4,25 @@
 
 const SHA256 = require('crypto-js/sha256');
 const Block = require('../models/Block.js');
-//Importing levelSandbox class
 const LevelSandboxClass = require('../controlleres/LevelSandbox.js');
 const db = new LevelSandboxClass.LevelSandbox();
+const Mempool = require('../controlleres/Mempool.js');
+
 
 
 class Blockchain {
 
     constructor() {
-        //this.chain = new LevelSandbox.LevelSandbox();
+        this.chain;
+        this.mempool;
+        this.initBlockchain();
+    }
+
+    initBlockchain(){
         this.chain = [];
+        this.mempool = new Mempool.Mempool();
         this.generateGenesisBlock();
+
     }
 
     // Auxiliar method to create a Genesis Block (always with height= 0)

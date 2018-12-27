@@ -42,7 +42,7 @@ class MempoolController {
                     });
             }catch (err){
                 if(err.message && err.code){
-                    res.statusCode = err.code;
+                    res.statusCode = parseInt(err.code);;
                     console.log(err.message);
                     res.send(JSON.stringify({ error: err.message }));
                 }else{
@@ -71,12 +71,16 @@ class MempoolController {
                         res.send(JSON.stringify({ error: err }));
                     });
             }catch (err){
-                res.statusCode = err.code;
+                res.statusCode = parseInt(err.code);;
                 console.log(err.message);
                 res.send(JSON.stringify({ error: err.message }));
             }
         });
     }
+
+    validateSignWithAddress(walletAddress){
+        
+    };
 
 }
 

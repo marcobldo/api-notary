@@ -36,6 +36,50 @@ class APIErrorController {
                     }
                     break;
 
+                    case "postNewBlock":
+                    let walletAddress = req.body.address;
+                    let messageSignature = req.body.star;
+                    if(!walletAddress){
+                        isValid = false;
+                        apiError.code = "422";
+                        apiError.message = "Invalid walletAddress data";
+                    }
+                    if(!star){
+                        isValid = false;
+                        apiError.code = "422";
+                        apiError.message = "Invalid star data";
+                    }else{
+                        try{
+                            let jsonRequestContent = JSON.parse(contents);
+                            if(jsonRequestContent){
+                                if(!jsonRequestContent.dec){
+                                    isValid = false;
+                                    apiError.code = "422";
+                                    apiError.message = "Invalid star.dec data.";
+                                }
+                                if(!jsonRequestContent.ra){
+                                    isValid = false;
+                                    apiError.code = "422";
+                                    apiError.message = "Invalid star.ra data.";
+                                }
+                                if(!jsonRequestContent.story){
+                                    isValid = false;
+                                    apiError.code = "422";
+                                    apiError.message = "Invalid star.story data.";
+                                }
+                            }else{
+                                isValid = false;
+                                apiError.code = "422";
+                                apiError.message = "Invalid star data. Json formater";
+                            }
+                        }catch(err){
+                            isValid = false;
+                            apiError.code = "422";
+                            apiError.message = err.message;
+                        }
+                    }
+                    break;
+
                     default:
                     isValid = false;
                     apiError.message = "Something wrong!";

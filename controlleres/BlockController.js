@@ -1,7 +1,7 @@
 const BlockClass = require('../models/Block.js');
 const BlockChain = require('../controlleres/BlockChain.js');
-const Mempool = require('../controlleres/Mempool.js');
-
+const APIError = require('../controlleres/APIErrorControler.js');
+let myAPIError =  new APIError.APIErrorController();
 let myBlockChain = new BlockChain.Blockchain();
 
 
@@ -79,65 +79,42 @@ class BlockController {
         });
     }
 
-    validateBlockArguments(newBlock){
-        if(newBlock){
-            if(newBlock.address){
-                if(newBlock.address.length===0){
-                    throw new Error("empty address request parm");
-                }
-            }else{
-                throw new Error("invalid address request parm");
-            }
-            if(newBlock.star){
-                if(newBlock.star.length===0){
-                    throw new Error("empty address request parm");
-                }
-            }
-        }
-    }
 
     postNewBlock() {
-        console.log("posting");// your JSON
-
         this.app.post("/block", (req, res) => {
             res.setHeader('Content-Type', 'application/json');
-            if(req){
-            //We sould hace some kind of arguments validation
-                try {
-                    console.log(req.body);// your JSON
-                    let newBlockRequest =  req.body;
-                    this.validateBlockArguments(newBlockRequest);
-                    let validationRequest = mempool.findWalletInPoolTimeoutRequest(newBlockRequest.address);
-                    console.log(JSON.stringify(validationRequest));
+            let isDataRequestValid = true;
+            try {            
+                myAPIError.validatePOSTEnpointData(req, "postNewBlock");
+            }catch (err){
+                if(err.message && err.code){
+                    res.statusCode = parseInt(err.code);;
+                    console.log(err.message);
+                    res.send(JSON.stringify({ error: err.message }));
+                }else{
+                    res.statusCode = 500;
+                    console.log("Error. postNewBlock Unexpected Error");
+                    res.send(JSON.stringify({ error: "Error. postNewBlock Unexpected Error" }));
+                }
+            }
 
-                    /*
-                    let _newBlock = new BlockClass.Block(newBlockRequest.body);
-                    myBlockChain.addBlock(_newBlock).then(
-                        (_result) => {
-                            console.log("Correctly added");
-                            console.log(_result);
-                            res.send(JSON.stringify({ result : _newBlock }));                    
-                        }
-                    ).catch(
-                        (err) => {
-                            res.statusCode = 400;
-                            console.log("Error. " + err);
-                            res.send(JSON.stringify({ error: err }));
-                        }
-                    );
+            if(isDataRequestValid){
 
-                    */
-                } catch (err){
-                    console.log("\n Error: " + err);
-                    res.statusCode = 404;
-                    res.send(JSON.stringify({ error: err }));
-                }      
-
-                
-            } else {
-                res.statusCode = 400;
-                console.log("Error. invalid request");
-                res.send(JSON.stringify({ error: "Invalid request" }));
+                let _newBlock = new BlockClass.Block(req.body);
+                myBlockChain.addBlock(_newBlock).then(
+                    (_result) => {
+                        res.statusCode = 200;
+                        console.log("Correctly added");
+                        console.log(_result);
+                        res.send(JSON.stringify({ result : _newBlock }));                    
+                    }
+                ).catch(
+                    (err) => {
+                        res.statusCode = 400;
+                        console.log("Error. " + err);
+                        res.send(JSON.stringify({ error: err }));
+                    }
+                );
             }
         });
     }
@@ -146,6 +123,7 @@ class BlockController {
      * Helper method to initialize a Mock dataset. It adds 10 test blocks to the blocks array.
      */
     initializeMockData() {
+
 /*
         (function theLoop (i) {
             setTimeout(function () {

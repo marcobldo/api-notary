@@ -5,10 +5,9 @@
 const SHA256 = require('crypto-js/sha256');
 const Block = require('../models/Block.js');
 const LevelSandboxClass = require('../controlleres/LevelSandbox.js');
-const db = new LevelSandboxClass.LevelSandbox();
 const Mempool = require('../controlleres/Mempool.js');
-
-
+const db = new LevelSandboxClass.LevelSandbox();
+ 
 
 class Blockchain {
 
@@ -70,64 +69,84 @@ class Blockchain {
     // Add new block
     addBlock(newBlock) {
         let self = this;
+        console.log("\n");
+        console.log(this.mempool);
+        console.log("\n");
+
         return new Promise(function(resolve, reject){
             if(newBlock){
-                db.getBlocksCount().then(
-                    (actualBlockHeght) => {
-                        if(actualBlockHeght > 0){
-                            console.log("\Current Block Height " + actualBlockHeght.toString() + "\n" );
-                            // Fill the block data 
-                            // Block height
-                            newBlock.height = actualBlockHeght;
-                            // UTC timestamp
-                            newBlock.time = new Date().getTime().toString().slice(0,-3);      
-                            // Block hash with SHA256 using newBlock and converting to a string
-
-                            self.getBlock(actualBlockHeght-1).then(
-                                (previousBlockJSONString) => {
-                                    //console.log("prev block JSON String founded " + previousBlockJSONString);
-                                    // previous block hash
-                                    newBlock.previousBlockHash = 
-                                    JSON.parse(previousBlockJSONString).hash;                                    
-                                    newBlock.hash = '';
-                                    newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-                                    let newBlockJsonString =  JSON.stringify(newBlock).toString()
-                                    //console.log("block JSON String added:\n" + newBlockJsonString.trim());
-                                    db.addLevelDBData(actualBlockHeght, newBlockJsonString).then(
-                                        (blockAdded) => {
-                                            resolve(newBlock);
-                                        }
-                                    ).catch(
-                                        (error) => {
-                                            reject(error); 
-                                        }
-                                    );
-                                }
-                            ).catch(
-                                (error) => {
-                                    reject("Invalid previus block");
-                                }
-                            );
+                self.mempool.verifyWalletAddress(newBlock.body.address).then(
+                    (isvalid) => {
+                        if(isvalid){
+                            self.add(self,resolve,reject,newBlock);
                         }else{
-                            reject("Invalid Chain height");
+                            reject("Your sign has expired. Please, sign your wallet addres to continue.");
                         }
                     }
                 ).catch(
-                    (error) => {
-                        reject(error);
+                    (err) => {
+                        if(err.message){
+                            reject(err.message);
+                        }else{
+                            reject(err);
+                        }
                     }
                 );
 
             }else{
                 reject("The new bllovk that you're traying too add in undefinded");
             }
-
-
-
          });
 
     }
 
+    add(self, resolve, reject,  newBlock){
+        db.getBlocksCount().then(
+            (actualBlockHeght) => {
+                if(actualBlockHeght > 0){
+                    console.log("\Current Block Height " + actualBlockHeght.toString() + "\n" );
+                    // Fill the block data 
+                    // Block height
+                    newBlock.height = actualBlockHeght;
+                    // UTC timestamp
+                    newBlock.time = new Date().getTime().toString().slice(0,-3);      
+                    // Block hash with SHA256 using newBlock and converting to a string
+
+                    self.getBlock(actualBlockHeght-1).then(
+                        (previousBlockJSONString) => {
+                            //console.log("prev block JSON String founded " + previousBlockJSONString);
+                            // previous block hash
+                            newBlock.previousBlockHash = 
+                            JSON.parse(previousBlockJSONString).hash;                                    
+                            newBlock.hash = '';
+                            newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+                            let newBlockJsonString =  JSON.stringify(newBlock).toString()
+                            //console.log("block JSON String added:\n" + newBlockJsonString.trim());
+                            db.addLevelDBData(actualBlockHeght, newBlockJsonString).then(
+                                (blockAdded) => {
+                                    resolve(newBlock);
+                                }
+                            ).catch(
+                                (error) => {
+                                    reject(error); 
+                                }
+                            );
+                        }
+                    ).catch(
+                        (error) => {
+                            reject("Invalid previus block");
+                        }
+                    );
+                }else{
+                    reject("Invalid Chain height");
+                }
+            }
+        ).catch(
+            (error) => {
+                reject(error);
+            }
+        );
+    }
 
     // Get Block By Height
     getBlock(selectedHeightBlock) {

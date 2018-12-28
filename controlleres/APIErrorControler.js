@@ -46,7 +46,7 @@ class APIErrorController {
                         apiError.message = "Invalid star data";
                     }else{
                         try{
-                            let jsonRequestContent = JSON.parse(bodyRequest.star);
+                            let jsonRequestContent = bodyRequest.star;
                             if(jsonRequestContent){
                                 if(!jsonRequestContent.dec){
                                     isValid = false;

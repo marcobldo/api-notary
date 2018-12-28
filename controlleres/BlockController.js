@@ -44,7 +44,7 @@ class BlockController {
                                         myBlockChain.getBlock(actualHeight).then((block) => {
                                             console.log("\nBlock requested data:\n");
                                             console.log(block);
-                                            res.send(JSON.stringify({ result: JSON.parse(block) }));
+                                            res.json(block);
                                         }).catch((err) => { 
                                             console.log(err);
                                             res.statusCode = 400;
@@ -87,6 +87,7 @@ class BlockController {
             try {            
                 myAPIError.validatePOSTEnpointData(req, "postNewBlock");
             }catch (err){
+                isDataRequestValid = false;
                 if(err.message && err.code){
                     res.statusCode = err.code;
                     console.log(err.message);
@@ -97,24 +98,24 @@ class BlockController {
                     res.send(JSON.stringify({ error: "Error. postNewBlock Unexpected Error" }));
                 }
             }
-
             if(isDataRequestValid){
-
                 let _newBlock = new BlockClass.Block(req.body);
                 myBlockChain.addBlock(_newBlock).then(
                     (_result) => {
                         res.statusCode = 200;
-                        console.log("Correctly added");
+                        console.log("postNewBlock. Correctly added");
                         console.log(_result);
-                        res.send(JSON.stringify({ result : _newBlock }));                    
-                    }
-                ).catch(
+                        console.log("\n");
+                        res.json(_newBlock);
+                    }).catch(
                     (err) => {
                         res.statusCode = 400;
-                        console.log("Error. " + err);
-                        res.send(JSON.stringify({ error: err }));
-                    }
-                );
+                        if(err.message){
+                            res.send(JSON.stringify({ error: err.message }));
+                        }else{
+                            res.send(JSON.stringify({ error: err }));
+                        }
+                    });
             }
         });
     }

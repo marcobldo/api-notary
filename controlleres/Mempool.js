@@ -3,12 +3,13 @@ const ValidatioNRequestClass = require('../models/ValidationRequest.js');
 const SignRequestClass = require('../models/SignRequest.js');
 const bitcoinMessage = require('bitcoinjs-message'); 
 const TimeoutRequestsWindowTime = 5*60*1000;
-
+const mempoolRequests = [];
+const mempoolValidSigns = [];
 
 class Mempool {
     constructor() {
-        this.mempoolRequests = [];
-        this.mempoolValidSigns = [];
+        //mempoolRequests = [];
+        //mempoolValidSigns = [];
     }
 
     addRequestValidation(walletAddress) {
@@ -30,7 +31,7 @@ class Mempool {
                             console.log("ValidationRequest added in mempoolRequests[]");// your JSON
                             console.log(newValidationRequest);
                             console.log("\n");
-                            _this.mempoolRequests.push(newValidationRequest);
+                            mempoolRequests.push(newValidationRequest);
                             _this.setRequestTimeOut(newValidationRequest);
                             resolve(newValidationRequest);
                         } 
@@ -51,7 +52,7 @@ class Mempool {
 
     setRequestTimeOut(validationRequest){
         let self = this;
-        this.mempoolRequests[validationRequest] = setTimeout(
+        mempoolRequests[validationRequest] = setTimeout(
             function() {
                 self.removeValidationRequest(validationRequest) 
                 }, TimeoutRequestsWindowTime );
@@ -59,7 +60,7 @@ class Mempool {
 
     setSignTimeOut(validSign, timeLeft){
         let self = this;
-        this.mempoolValidSigns[validSign] = setTimeout(
+        mempoolValidSigns[validSign] = setTimeout(
             function() {
                 self.removeValidSign(validSign) 
             }, timeLeft*1000 );
@@ -67,17 +68,17 @@ class Mempool {
     }
 
     removeValidationRequest(validationRequest){
-        let index = this.mempoolRequests.indexOf(validationRequest);
+        let index = mempoolRequests.indexOf(validationRequest);
         if (index >= 0) {
             console.log("\nRequest address removed from mempoolRequests[]\n");
-            this.mempoolRequests.splice(index, 1);
+            mempoolRequests.splice(index, 1);
         }
     }
 
     removeValidSign(validSign){
-        let index = this.mempoolValidSigns.indexOf(validSign);
+        let index = mempoolValidSigns.indexOf(validSign);
         if (index >= 0) {
-            this.mempoolValidSigns.splice(index, 1);
+            mempoolValidSigns.splice(index, 1);
             console.log("\nValid sign removed from mempoolValidSigns[]\n");
         }
     }
@@ -87,8 +88,8 @@ class Mempool {
         var requestFounded = null;
                 return new Promise (function (resolve,reject){
                     if(walletAddress){
-                        if(_this.mempoolRequests){
-                            _this.mempoolRequests.forEach(function(validationRequest) {
+                        if(mempoolRequests){
+                            mempoolRequests.forEach(function(validationRequest) {
                                 //console.log(validationRequest);
                                     if(validationRequest.address === walletAddress){
                                         requestFounded = validationRequest;
@@ -115,13 +116,13 @@ class Mempool {
                 });
     }
 
-    findSignInPoolValidSigns(walletAddress){
+    findAddressInPoolValidSigns(walletAddress){
         let _this = this;
         var validSignFounded = null;
                 return new Promise (function (resolve,reject){
                     if(walletAddress){
-                        if(_this.mempoolValidSigns){
-                            _this.mempoolValidSigns.forEach(function(sign) {
+                        if(mempoolValidSigns){
+                            mempoolValidSigns.forEach(function(sign) {
                                 //console.log(validationRequest);
                                     if(sign.status.address === walletAddress){
                                         validSignFounded = sign;
@@ -161,7 +162,7 @@ class Mempool {
         return new Promise(function (resolve,reject){
             if(walletAddress && messageSignature){
                 //first, find validSign in signPool
-                _this.findSignInPoolValidSigns(walletAddress).then(
+                _this.findAddressInPoolValidSigns(walletAddress).then(
                     (signMessageRequest) => {
                         if(signMessageRequest){
                             //just updating the time window
@@ -181,7 +182,7 @@ class Mempool {
                                 console.log("signMessageRequest has an invalid sign");     
                                 signMessageRequest.status.messageSignature = false;
                             }
-                            console.log("resolving findSignInPoolValidSigns");     
+                            console.log("resolving findAddressInPoolValidSigns");     
                             resolve(signMessageRequest);
                         }else{
                             console.log("signMessageRequest is null,looking in mempoolRequests[] ");     
@@ -207,7 +208,7 @@ class Mempool {
                                                 newSignRequest.status.messageSignature = true;
                                                 let timeSignLeft = _this.calculeValidationTimeLeft(newSignRequest.status);
                                                 newSignRequest.status.validationWindow = timeSignLeft;
-                                                _this.mempoolValidSigns.push(newSignRequest);
+                                                mempoolValidSigns.push(newSignRequest);
                                                 _this.setSignTimeOut(newSignRequest,timeSignLeft);
                                                 console.log("pushing newSignRequest on mempoolValidSigns[]");     
                                                 console.log(newSignRequest);
@@ -273,6 +274,44 @@ class Mempool {
         console.log("new TimeWindow: "+timeLeft);// your JSON
         return  timeLeft;
     }
+
+    verifyWalletAddress(walletAddress){
+        console.log("Verifying walletAddres...");
+        let _this = this;
+        return new Promise(function(resolve,reject){
+            if(walletAddress){
+                _this.findAddressInPoolValidSigns(walletAddress).then(
+                    (signFounded) => {
+                        if(signFounded){
+                            if(signFounded.registerStar){
+                                console.log(walletAddress+" can register stars");
+                                resolve(true);
+                            }else{
+                                console.log("signFounded.registerStar=FALSE. walletAddres can NOT register stars");
+                                resolve(false);
+                            }
+                        }else{
+                            console.log(walletAddress+" NOT FOUNDED. walletAddres can NOT register stars");
+                            resolve(false);
+                        }
+                    }
+                ).catch(
+                    (err) => {
+                        if(err.message){
+                            reject(err.message);
+                        }else{
+                            reject(err);
+                        }
+                    }
+                );
+            }else{
+                console.log("Error verifying walletAddres, Invalid walletAddress");
+                reject("Error verifying walletAddres, Invalid walletAddress");
+            }
+        });
+    }
+
+
 }
 
 module.exports.Mempool = Mempool;

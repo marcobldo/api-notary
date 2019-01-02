@@ -4,6 +4,7 @@
 
 const SHA256 = require('crypto-js/sha256');
 const Block = require('../models/Block.js');
+const Star = require('../models/Star.js');
 const LevelSandboxClass = require('../controlleres/LevelSandbox.js');
 const Mempool = require('../controlleres/Mempool.js');
 const db = new LevelSandboxClass.LevelSandbox();
@@ -66,6 +67,45 @@ class Blockchain {
         });
     }
 
+    getAllBlocksByAddress(walletAddress) {
+        console.log("\nFinding getAllBlocksByAddress by walletAddress");
+        return new Promise(function (resolve, reject) {
+            db.getAllBlocksByAddress(walletAddress).then(
+                (blockResult) => {
+                    if (blockResult) {
+                        resolve(blockResult);
+                    } else {
+                        reject("starts not founded");
+                    }
+                }
+            ).catch(
+                (err) => {
+                    reject(err);
+                });
+
+        });
+    }
+
+    findBlockByHash(requestedHash) {
+        console.log("\nFinding new block by hash");
+        return new Promise(function (resolve, reject) {
+            db.findBlockByHash(requestedHash).then(
+                (blockResult) => {
+                    if (blockResult) {
+                        resolve(blockResult);
+                    } else {
+                        reject("Block not founded");
+                    }
+                }
+            ).catch(
+                (err) => {
+                    console.log(err);
+                    reject(err);
+                });
+
+        });
+    }
+
     // Add new block
     addBlock(newBlock) {
         let self = this;
@@ -77,8 +117,14 @@ class Blockchain {
             if(newBlock){
                 self.mempool.verifyWalletAddress(newBlock.body.address).then(
                     (isvalid) => {
-                        if(isvalid){
-                            self.add(self,resolve,reject,newBlock);
+                        if (isvalid) {
+                            if (newBlock.body.star.story) {
+                                console.log("Encouding start story to hex");
+                                let encoudedStory = Buffer.from((newBlock.body.star.story), 'utf8').toString('hex');
+                                newBlock.body.star.story = encoudedStory; 
+                                console.log(newBlock);
+                                self.add(self, resolve, reject, newBlock);
+                            }
                         }else{
                             reject("Your sign has expired. Please, sign your wallet addres to continue.");
                         }
@@ -100,7 +146,8 @@ class Blockchain {
 
     }
 
-    add(self, resolve, reject,  newBlock){
+    add(self, resolve, reject, newBlock) {
+        console.log("\n Enter in add block method");
         db.getBlocksCount().then(
             (actualBlockHeght) => {
                 if(actualBlockHeght > 0){
@@ -143,6 +190,7 @@ class Blockchain {
             }
         ).catch(
             (error) => {
+                console.log("\n Enter in add block method");
                 reject(error);
             }
         );
@@ -155,13 +203,14 @@ class Blockchain {
             db.getLevelDBData(selectedHeightBlock).then(
                 (foundedBlock) => {
                     if(foundedBlock && foundedBlock.hash != ""){
-                        resolve(JSON.parse(JSON.stringify(foundedBlock)));
+                        resolve(foundedBlock);
                     }else{
                         reject("Dude, something is wrong with the block");
                     }
                 }
             ).catch(
                 (err) => {
+                    console.log(err);
                     reject(err);
                 }
             );

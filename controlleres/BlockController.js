@@ -19,6 +19,8 @@ class BlockController {
         this.initializeMockData();
         this.getBlockByIndex();
         this.postNewBlock();
+        this.getStarByHash();
+        this.getALLStarByAddress()
     }
 
 
@@ -116,6 +118,86 @@ class BlockController {
                             res.send(JSON.stringify({ error: err }));
                         }
                     });
+            }
+        });
+    }
+
+    getStarByHash() {
+        this.app.get("/stars/:hash", (req, res) => {
+            res.setHeader('Content-Type', 'application/json');
+            let isDataRequestValid = true;
+            try {
+                myAPIError.validateGETEnpointData(req, "getStarByHash");
+            } catch (err) {
+                isDataRequestValid = false;
+                if (err.message && err.code) {
+                    res.statusCode = err.code;
+                    console.log(err.message);
+                    res.send(JSON.stringify({ error: err.message }));
+                } else {
+                    res.statusCode = 500;
+                    console.log("Error. getStarByHash Unexpected Error");
+                    res.send(JSON.stringify({ error: "Error. getStarByHash Unexpected Error" }));
+                }
+            }
+            if (isDataRequestValid) {
+                let requestedHash = req.params.hash;
+                console.log("trying to find: " + requestedHash);
+                myBlockChain.findBlockByHash(requestedHash).then(
+                    (_result) => {
+                        res.statusCode = 200;
+                        console.log("findBlockByHash. Correctly founded");
+                        console.log(_result);
+                        console.log("\n");
+                        res.json(_result);
+                    }).catch(
+                    (err) => {
+                        console.log(err);
+                            res.statusCode = 400;
+                            if (err.message) {
+                                res.send(JSON.stringify({ error: err.message }));
+                            } else {
+                                res.send(JSON.stringify({ error: err }));
+                            }
+                        });
+            }
+        });
+    }
+
+    getALLStarByAddress() {
+        this.app.get("/stars/address/:walletAddress", (req, res) => {
+            res.setHeader('Content-Type', 'application/json');
+            let isDataRequestValid = true;
+            try {
+                myAPIError.validateGETEnpointData(req, "getALLStarByAddress");
+            } catch (err) {
+                isDataRequestValid = false;
+                if (err.message && err.code) {
+                    res.statusCode = err.code;
+                    console.log(err.message);
+                    res.send(JSON.stringify({ error: err.message }));
+                } else {
+                    res.statusCode = 500;
+                    console.log("Error. getStarByHash Unexpected Error");
+                    res.send(JSON.stringify({ error: "Error. getStarByHash Unexpected Error" }));
+                }
+            }
+            if (isDataRequestValid) {
+                myBlockChain.getAllBlocksByAddress(req.params.walletAddress).then(
+                    (_result) => {
+                        res.statusCode = 200;
+                        console.log("find all stars. Correctly founded " + _result.lenght);
+                        console.log("\n");
+                        res.send(JSON.stringify({stars: _result }));
+                    }).catch(
+                        (err) => {
+                            res.statusCode = 400;
+                            if (err.message) {
+                                res.send(JSON.stringify({ error: err.message }));
+                            } else {
+                                res.send(JSON.stringify({ error: err }));
+                            }
+                        });
             }
         });
     }

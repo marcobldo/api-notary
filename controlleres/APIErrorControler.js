@@ -6,6 +6,48 @@ class APIErrorController {
     constructor() {
     }
 
+    validateGETEnpointData(req, type) {
+        apiError.code = "400";
+        var isValid = true;
+        let bodyRequest = req.params;
+        if (req) {
+            if (req.params) {
+                switch (type) {
+                    case "getStarByHash":
+                        if (!bodyRequest.hash) {
+                            isValid = false;
+                            apiError.code = "422";
+                            apiError.message = "Invalid hash data";
+                        }
+                        break;
+                    case "getALLStarByAddress":
+                        if (!bodyRequest.walletAddress) {
+                            isValid = false;
+                            apiError.code = "422";
+                            apiError.message = "Invalid walletAddress data";
+                        }
+                        break;
+                    default:
+                        isValid = false;
+                        apiError.message = "Something wrong!";
+                }
+            } else {
+                // invalid req body
+                isValid = false;
+                apiError.message = "Invalid get body";
+            }
+        } else {
+            // invalid req
+            isValid = false;
+            apiError.message = "Invalid req";
+        }
+
+        if (!isValid) {
+            throw apiError;
+        }
+
+    }
+
     validatePOSTEnpointData(req, type){
         apiError.code = "400";
         var isValid = true;

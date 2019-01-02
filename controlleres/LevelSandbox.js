@@ -5,6 +5,10 @@
 const level = require('level');
 // Declaring the folder path that store the data
 const chainDB = './chaindata';
+
+var StringDecoder = require('string_decoder').StringDecoder;
+const decoder = new StringDecoder('hex');
+
 // Declaring a class
 class LevelSandbox {
 	// Declaring the class constructor
@@ -24,8 +28,43 @@ class LevelSandbox {
                         console.log('Block ' + key + ' get failed', err);
                         reject(err);
                     }
-                }else {
-                    resolve(value);
+                } else {
+                    let parsedBlockData = JSON.parse(value);
+                    if (parsedBlockData) {
+                        if (parsedBlockData.body.star) {
+                            if (parsedBlockData.body.star.story) {
+                                var isCorrectlyDecoded = false;
+                                var decodedStoryData = null;
+                                try {
+                                    let buffer = new Buffer.from(parsedBlockData.body.star.story, 'hex').toString();
+                                    decodedStoryData = decoder.write(buffer);
+                                    isCorrectlyDecoded = true;
+                                    console.log(buffer);
+                                } catch (err) {
+                                    if (err.message) {
+                                        console.log(err.message);
+                                        reject(err.message);
+                                    } else {
+                                        console.log(err);
+                                        reject(err);
+                                    }
+                                }
+                                if (isCorrectlyDecoded && decodedStoryData) {
+                                    parsedBlockData.body.star.decodedStory = decodedStoryData;
+                                    console.log("Star.story decoded correctly");
+                                    console.log(decodedStoryData);
+
+
+                                } else {
+                                    console.log("Star.story can not be decoded");
+
+                                }
+                            }
+                        } else {
+                            console.log("getAllBlocksByAddress, matching address, but start valud is invalid");
+                        }
+                    }
+                    resolve(parsedBlockData);
                 }
             });
         });
@@ -51,21 +90,152 @@ class LevelSandbox {
     getBlocksCount() {
         let self = this;
         let dataArray = [];
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
+            console.log("getBlocksCount");
             self.db.createReadStream()
-            .on('data', function (data) {
-                dataArray.push(data);
-            })
-            .on('error', function (err) {
-                console.log(err);
-                reject(err)
-            })
-            .on('close', function () {
-                resolve(dataArray.length);
-            });
+                .on('data', function (data) {
+                    dataArray.push(data);
+                })
+                .on('error', function (err) {
+                    console.log('getBlocksCount!', err);
+                    reject(err);
+                })
+                .on('close', function () {
+                    console.log('Stream closed');
+                    resolve(dataArray.length);
+                })
+                .on('end', function () {
+                    console.log('Stream ended');
+                    resolve(dataArray.length);
+                });
+            
         });
+    }
 
-      }
+    getAllBlocksByAddress(walletAddress) {
+        let self = this;
+        let dataArray = [];
+        return new Promise(function (resolve, reject) {
+            console.log("getBlocksCount");
+            self.db.createReadStream()
+                .on('data', function (data) {
+                    let parsedBlockData = JSON.parse(data.value);
+                    if (walletAddress === parsedBlockData.body.address) {
+                        if (parsedBlockData.body.star) {
+                            if (parsedBlockData.body.star.story) {
+                                var isCorrectlyDecoded = false;
+                                var decodedStoryData = null;
+                                try {
+                                    let buffer = new Buffer.from(parsedBlockData.body.star.story,'hex').toString();
+                                    decodedStoryData = decoder.write(buffer);
+                                    isCorrectlyDecoded = true;
+                                    console.log(buffer);
+                                } catch (err) {
+                                    if (err.message) {
+                                        console.log(err.message);
+                                        reject(err.message);
+                                    } else {
+                                        console.log(err);
+                                        reject(err);
+                                    }
+                                }
+                                if (isCorrectlyDecoded && decodedStoryData) {
+                                    parsedBlockData.body.star.decodedStory = decodedStoryData;
+                                    console.log("Star.story decoded correctly");
+                                    console.log(decodedStoryData);
+
+                                } else {
+                                    console.log("Star.story can not be decoded");
+
+                                }
+                            }
+                        } else {
+                            console.log("getAllBlocksByAddress, matching address, but start valud is invalid");
+                        }
+                        dataArray.push(parsedBlockData);
+                    }
+                })
+                .on('error', function (err) {
+                    console.log('getBlocksCount!', err);
+                    reject(err);
+                })
+                .on('close', function () {
+                    console.log('Stream closed');
+                    resolve(dataArray);
+                })
+                .on('end', function () {
+                    //console.log('Stream ended');
+                    //resolve(dataArray);
+                });
+
+        });
+    }
+
+
+    findBlockByHash(hashBlock) {
+        let self = this;
+        let startFounded = null;
+        return new Promise(function (resolve, reject) {
+            console.log("Reading ledger...");
+            console.log("findind hasBLock: " + hashBlock);
+
+            self.db.createReadStream()
+                .on('data', function (data) {
+                    let parsedBlockData = JSON.parse(data.value);
+                    if (parsedBlockData.hash === hashBlock) {
+                        console.log("Star hash founded");
+                        if (parsedBlockData.body.star) {
+                            if (parsedBlockData.body.star.story) {
+                                var isCorrectlyDecoded = false;
+                                var decodedStoryData = null;
+                                try {
+                                    let buffer = new Buffer.from(parsedBlockData.body.star.story, 'hex').toString();
+                                    decodedStoryData = decoder.write(buffer);
+                                    isCorrectlyDecoded = true;
+                                    console.log(buffer);
+                                } catch (err) {
+                                    if (err.message) {
+                                        console.log(err.message);
+                                        reject(err.message);
+                                    } else {
+                                        console.log(err);
+                                        reject(err);
+                                    }
+                                }
+                                if (isCorrectlyDecoded && decodedStoryData) {
+                                    parsedBlockData.body.star.decodedStory = decodedStoryData;
+                                    console.log("Star.story decoded correctly");
+                                    console.log(decodedStoryData);
+
+                                } else {
+                                    console.log("Star.story can not be decoded");
+
+                                }
+                            }
+                        } else {
+                            console.log("getAllBlocksByAddress, matching address, but start valud is invalid");
+                        }
+                        //console.log(data.value);
+                        startFounded = parsedBlockData;
+                    }
+                })
+                .on('error', function (err) {
+                    reject(err);
+                })
+                .on('close', function () {
+                    console.log('Stream closed');
+                    if (!startFounded) {
+                        console.log('Start not founded with hash: '+hashBlock);
+                    }
+                    resolve(startFounded);
+                })
+                .on('end', function () {
+                    console.log('Stream ended');
+                    resolve(startFounded);
+                });
+
+        });
+    }
 }
 
 // Export the class

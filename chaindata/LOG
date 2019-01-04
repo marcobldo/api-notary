@@ -1,0 +1,5 @@
+2019/01/04-15:49:51.940 4ef0 Recovering log #19
+2019/01/04-15:49:51.941 4ef0 Level-0 table #21: started
+2019/01/04-15:49:51.969 4ef0 Level-0 table #21: 721 bytes OK
+2019/01/04-15:49:52.035 4ef0 Delete type=0 #19
+2019/01/04-15:49:52.040 4ef0 Delete type=3 #17

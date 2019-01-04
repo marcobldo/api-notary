@@ -12,6 +12,55 @@ class Mempool {
         //mempoolValidSigns = [];
     }
 
+    removeAddresPermissions(walletAddress){
+        let _this = this;
+        return new Promise (function (resolve,reject){
+            if(walletAddress){
+                let removeValidSignPromise = new Promise (function(resolve,reject){
+                    _this.findAddressInPoolValidSigns(walletAddress).then(
+                        (validSign) => {
+                            console.log("removeValidSignPromise CORRECTLY!");
+                            _this.removeValidSign(validSign);
+                            resolve(validSign);
+                        }
+                    ).catch(
+                        (err) => {
+                            console.log(err);
+                            reject(err);
+                        }
+                    );
+
+                });
+                let removeValidationRequestPromise = new Promise (function(resolve,reject){
+                    _this.findWalletInPoolTimeoutRequest(walletAddress).then(
+                        (validationRequest) => {
+                            console.log("removeValidationRequestPromise CORRECTLY!");
+                            _this.removeValidationRequest(validationRequest);
+                            resolve(validationRequest)
+                        }
+                    ).catch(
+                        (err) => {
+                            console.log(err);
+                            reject(err);
+                        }
+                    );
+
+                });
+                Promise.all([removeValidSignPromise, removeValidationRequestPromise]).then((isAllOK) => {
+                    console.log("removeAddresPermissions CORRECTLY!");
+                    resolve(isAllOK);
+                }).catch((err) => {
+                    console.log(err);
+                    reject(err);
+                });
+            } else {
+                console.log("removeAddresPermissions Error. invalid walletAddress");
+                reject("removeAddresPermissions Error. invalid walletAddress");
+                //have to throw an error!!
+            }
+        });
+    }
+
     addRequestValidation(walletAddress) {
         let _this = this;
         return new Promise (function (resolve,reject){

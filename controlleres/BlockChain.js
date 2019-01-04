@@ -127,28 +127,60 @@ class Blockchain {
                                 let _self = self;
                                 db.getBlocksCount().then(
                                     (actualBlockHeght) => {
+                                        /*
+                                        REVIEW COMMENT>
+                                        actualBlockHeight will give you the height of the last block in the chain,
+                                         by subtracting one you are getting the second last block, 
+                                         this is why your previous hash is invalid, you must use the last block instead.
+                                         RESPONSE>
+                                         In this poject, the Blockchain Genesis Block has the height value = 0, when I call getBlocksCount(); returns 1,
+                                         That mens I have to use actualBlockHeght-1 to get a previousBlockHash value, then use it in my new Block that i want to add.
+                                        */
                                         if(actualBlockHeght > 0){
                                             console.log("\Current Block Height " + actualBlockHeght.toString() + "\n" );
-                                            // Fill the block data 
-                                            // Block height
                                             newBlock.height = actualBlockHeght;
-                                            // UTC timestamp
                                             newBlock.time = new Date().getTime().toString().slice(0,-3);      
-                                            // Block hash with SHA256 using newBlock and converting to a string
-                        
+                                            //I used "actualBlockHeght-1" because I have to find "previousBlockHash" and adding in this block to ensure the blockchain linking
+                                            //You have using an older version (in review #3) of the project,
+                                            //I know that because the next part doesn´t exists in the review comments, I'll check this comment to be shure this is the fianal version (04/01/2019)
                                             _self.getBlock(actualBlockHeght-1).then(
                                                 (previousBlockJSONString) => {
                                                     if(previousBlockJSONString){
-                                                        //console.log("prev block JSON String founded " + previousBlockJSONString);
-                                                        // previous block hash
                                                         newBlock.previousBlockHash = previousBlockJSONString.hash;                                    
                                                         newBlock.hash = '';
                                                         newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
                                                         let newBlockJsonString =  JSON.stringify(newBlock).toString()
-                                                        //console.log("block JSON String added:\n" + newBlockJsonString.trim());
                                                         db.addLevelDBData(actualBlockHeght, newBlockJsonString).then(
                                                             (blockAdded) => {
-                                                                resolve(newBlock);
+                                                                if(blockAdded){
+                                                                    /*
+                                                                    REVIEW COMMENT>
+                                                                    After the block is added successfully, you have to remove the permission to add further blocks for that address because a user is 
+                                                                    only permitted to add a single star after validation. Afterward, the user has to restart the validation process.
+                                                                    RESPONSE>
+                                                                    Totally agree.
+                                                                    */
+                                                                   self.mempool.removeAddresPermissions(newBlock.body.address).then(
+                                                                    (isRemoveSuuccsess) => {
+                                                                        if(isRemoveSuuccsess){
+                                                                            console.log("Permissions removed successfully!");
+                                                                            resolve(newBlock);
+                                                                        }else{
+                                                                            console.log("Remove wallet permissionsUnexpected Error");
+                                                                            reject("Remove wallet permissionsUnexpected Error");
+                                                                        }
+                                                                    }
+                                                                    ).catch(
+                                                                        (err)=> {
+                                                                            console.log(err);
+                                                                            reject(err);
+                                                                        }
+                                                                    );
+
+
+                                                                }else{
+                                                                    reject("The block you trying to add is null or invalid");
+                                                                }
                                                             }
                                                         ).catch(
                                                             (error) => {

@@ -3,10 +3,10 @@
 |  ===============================================*/
 
 class Block{
-	constructor(data){
+	constructor(star){
      this.hash = "",
      this.height = 0,
-     this.body = data,
+     this.body = star,
      this.time = 0,
      this.previousBlockHash = ""
     }

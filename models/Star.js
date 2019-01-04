@@ -3,10 +3,13 @@
 |  ===============================================*/
 
 class Star{
-	constructor(simpleData){
-         this.dec = "",
-         this.ra= "",
-         this.story = simpleData
+	constructor(address, _story){
+        this.star = {
+            dec : "",
+            ra : "",
+            story : _story
+        },
+        this.address = address
     }
 }
 module.exports.Star = Star;

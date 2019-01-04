@@ -38,7 +38,7 @@ class Blockchain {
             newBlock.time = new Date().getTime().toString().slice(0,-3);
             // previous block hash
             newBlock.previousBlockHash = '';
-            newBlock.body = 'Genesis Block!';
+            newBlock.body = new Star.Star("0x","Genesis Star - Block");
             // Block hash with SHA256 using newBlock and converting to a string
             newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
             // Adding block object to chain
@@ -123,7 +123,58 @@ class Blockchain {
                                 let encoudedStory = Buffer.from((newBlock.body.star.story), 'utf8').toString('hex');
                                 newBlock.body.star.story = encoudedStory; 
                                 console.log(newBlock);
-                                self.add(self, resolve, reject, newBlock);
+                                console.log("\n Enter in add block method");
+                                let _self = self;
+                                db.getBlocksCount().then(
+                                    (actualBlockHeght) => {
+                                        if(actualBlockHeght > 0){
+                                            console.log("\Current Block Height " + actualBlockHeght.toString() + "\n" );
+                                            // Fill the block data 
+                                            // Block height
+                                            newBlock.height = actualBlockHeght;
+                                            // UTC timestamp
+                                            newBlock.time = new Date().getTime().toString().slice(0,-3);      
+                                            // Block hash with SHA256 using newBlock and converting to a string
+                        
+                                            _self.getBlock(actualBlockHeght-1).then(
+                                                (previousBlockJSONString) => {
+                                                    if(previousBlockJSONString){
+                                                        //console.log("prev block JSON String founded " + previousBlockJSONString);
+                                                        // previous block hash
+                                                        newBlock.previousBlockHash = previousBlockJSONString.hash;                                    
+                                                        newBlock.hash = '';
+                                                        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+                                                        let newBlockJsonString =  JSON.stringify(newBlock).toString()
+                                                        //console.log("block JSON String added:\n" + newBlockJsonString.trim());
+                                                        db.addLevelDBData(actualBlockHeght, newBlockJsonString).then(
+                                                            (blockAdded) => {
+                                                                resolve(newBlock);
+                                                            }
+                                                        ).catch(
+                                                            (error) => {
+                                                                reject(error); 
+                                                            }
+                                                        );
+                                                    } else {
+                                                        reject("Invalid previus block");
+                                                    }
+                                                }
+                                            ).catch(
+                                                (error) => {
+                                                    console.log(error);
+                                                    reject(err);
+                                                }
+                                            );
+                                        }else{
+                                            reject("Invalid Chain height");
+                                        }
+                                    }
+                                ).catch(
+                                    (error) => {
+                                        console.log("\n Enter in add block method");
+                                        reject(error);
+                                    }
+                                );
                             }
                         }else{
                             reject("Your sign has expired. Please, sign your wallet addres to continue.");
@@ -146,55 +197,6 @@ class Blockchain {
 
     }
 
-    add(self, resolve, reject, newBlock) {
-        console.log("\n Enter in add block method");
-        db.getBlocksCount().then(
-            (actualBlockHeght) => {
-                if(actualBlockHeght > 0){
-                    console.log("\Current Block Height " + actualBlockHeght.toString() + "\n" );
-                    // Fill the block data 
-                    // Block height
-                    newBlock.height = actualBlockHeght;
-                    // UTC timestamp
-                    newBlock.time = new Date().getTime().toString().slice(0,-3);      
-                    // Block hash with SHA256 using newBlock and converting to a string
-
-                    self.getBlock(actualBlockHeght-1).then(
-                        (previousBlockJSONString) => {
-                            //console.log("prev block JSON String founded " + previousBlockJSONString);
-                            // previous block hash
-                            newBlock.previousBlockHash = 
-                            JSON.parse(previousBlockJSONString).hash;                                    
-                            newBlock.hash = '';
-                            newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-                            let newBlockJsonString =  JSON.stringify(newBlock).toString()
-                            //console.log("block JSON String added:\n" + newBlockJsonString.trim());
-                            db.addLevelDBData(actualBlockHeght, newBlockJsonString).then(
-                                (blockAdded) => {
-                                    resolve(newBlock);
-                                }
-                            ).catch(
-                                (error) => {
-                                    reject(error); 
-                                }
-                            );
-                        }
-                    ).catch(
-                        (error) => {
-                            reject("Invalid previus block");
-                        }
-                    );
-                }else{
-                    reject("Invalid Chain height");
-                }
-            }
-        ).catch(
-            (error) => {
-                console.log("\n Enter in add block method");
-                reject(error);
-            }
-        );
-    }
 
     // Get Block By Height
     getBlock(selectedHeightBlock) {
